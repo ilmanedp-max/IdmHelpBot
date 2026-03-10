@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>IDM HELP BOT</title>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:system-ui,Arial;
+background:#f2f2f2;
+display:flex;
+justify-content:center;
+}
+
+.app{
+
+width:100%;
+max-width:420px;
+background:white;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+
+}
+
+header{
+
+background:linear-gradient(90deg,#e60012,#ffd400,#004ea2);
+color:white;
+padding:16px;
+text-align:center;
+font-weight:700;
+font-size:20px;
+
+}
+
+.subtitle{
+
+font-size:12px;
+opacity:0.9;
+
+}
+
+.container{
+
+padding:20px;
+flex:1;
+
+}
+
+label{
+
+font-size:13px;
+font-weight:600;
+
+}
+
+input,select{
+
+width:100%;
+padding:14px;
+margin-top:8px;
+margin-bottom:15px;
+border-radius:10px;
+border:1px solid #ddd;
+font-size:16px;
+
+}
+
+button{
+
+width:100%;
+padding:14px;
+border:none;
+border-radius:10px;
+font-size:15px;
+font-weight:600;
+margin-top:8px;
+
+}
+
+.generate{
+
+background:#004ea2;
+color:white;
+
+}
+
+.png{
+
+background:#ffd400;
+
+}
+
+.jpg{
+
+background:#e60012;
+color:white;
+
+}
+
+.result{
+
+margin-top:20px;
+text-align:center;
+
+}
+
+#barcode{
+
+width:100%;
+
+}
+
+#qrcode{
+
+display:none;
+margin:auto;
+
+}
+
+footer{
+
+text-align:center;
+font-size:12px;
+color:#666;
+padding:12px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+
+IDM HELP BOT
+
+<div class="subtitle">
+Pembuat Barcode dan QR Code
+</div>
+
+</header>
+
+<div class="container">
+
+<label>Masukkan Plu</label>
+<input id="text" type="text" placeholder="contoh : 8998888123456">
+
+<label>Pilih Jenis Code</label>
+
+<select id="type">
+<option value="barcode">Barcode</option>
+<option value="qrcode">QR Code</option>
+</select>
+
+<button class="generate" onclick="generateCode()">
+Generate Code
+</button>
+
+<div class="result">
+
+<svg id="barcode"></svg>
+
+<div id="qrcode"></div>
+
+</div>
+
+<button class="png" onclick="downloadPNG()">
+Download PNG
+</button>
+
+<button class="jpg" onclick="downloadJPG()">
+Download JPG
+</button>
+
+</div>
+
+<footer>
+
+IDM HELP BOT • MOBILE TOOL
+
+</footer>
+
+</div>
+
+<script>
+
+let qrInstance = null;
+
+function generateCode(){
+
+const text = document.getElementById("text").value.trim();
+const type = document.getElementById("type").value;
+
+const barcode = document.getElementById("barcode");
+const qrcode = document.getElementById("qrcode");
+
+if(text === ""){
+alert("Masukkan angka atau teks terlebih dahulu");
+return;
+}
+
+if(type === "barcode"){
+
+qrcode.style.display = "none";
+barcode.style.display = "block";
+
+JsBarcode(barcode, text, {
+
+format:"CODE128",
+width:2,
+height:90,
+displayValue:true
+
+});
+
+}else{
+
+barcode.style.display = "none";
+qrcode.style.display = "block";
+
+qrcode.innerHTML = "";
+
+qrInstance = new QRCode(qrcode,{
+text:text,
+width:220,
+height:220
+});
+
+}
+
+}
+
+function downloadPNG(){
+
+const barcode = document.getElementById("barcode");
+const qrcode = document.getElementById("qrcode");
+
+if(qrcode.style.display !== "none"){
+
+const img = qrcode.querySelector("img") || qrcode.querySelector("canvas");
+
+const link = document.createElement("a");
+
+link.download = "qrcode.png";
+link.href = img.src || img.toDataURL();
+
+link.click();
+
+}else{
+
+const svgData = new XMLSerializer().serializeToString(barcode);
+
+const canvas = document.createElement("canvas");
+
+const ctx = canvas.getContext("2d");
+
+const img = new Image();
+
+img.onload = function(){
+
+canvas.width = img.width;
+canvas.height = img.height;
+
+ctx.drawImage(img,0,0);
+
+const link = document.createElement("a");
+
+link.download = "barcode.png";
+link.href = canvas.toDataURL();
+
+link.click();
+
+};
+
+img.src = "data:image/svg+xml;base64," + btoa(svgData);
+
+}
+
+}
+
+function downloadJPG(){
+
+const qrcode = document.getElementById("qrcode");
+
+if(qrcode.style.display !== "none"){
+
+const img = qrcode.querySelector("img") || qrcode.querySelector("canvas");
+
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+
+const image = new Image();
+
+image.onload = function(){
+
+canvas.width = image.width;
+canvas.height = image.height;
+
+ctx.drawImage(image,0,0);
+
+const link = document.createElement("a");
+
+link.download = "qrcode.jpg";
+link.href = canvas.toDataURL("image/jpeg");
+
+link.click();
+
+};
+
+image.src = img.src || img.toDataURL();
+
+}else{
+
+alert("JPG hanya untuk QR Code. Untuk barcode gunakan PNG.");
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
